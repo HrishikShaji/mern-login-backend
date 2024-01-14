@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import { createSecretToken } from "../utils/generateToken";
 
 var mysql = require("mysql");
 dotenv.config();
@@ -31,7 +32,7 @@ app.post("/login", (req, res) => {
       .status(400)
       .json({ error: "Username and password are required" });
   }
-
+  console.log(username, password);
   const query = "SELECT * FROM users WHERE username = ? AND password = ?";
   connection.query(query, [username, password], (error, results, fields) => {
     if (error) {
@@ -39,7 +40,15 @@ app.post("/login", (req, res) => {
     }
 
     if (results.length > 0) {
-      return res.status(200).json({ message: "Login successful" });
+      const id = results[0].id;
+      console.log(id);
+      const token = createSecretToken(id);
+      res.cookie("token", token, {
+        httpOnly: false,
+      });
+      res
+        .status(201)
+        .json({ message: "User logged in successfully", success: true });
     } else {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -54,16 +63,22 @@ app.post("/signin", (req, res) => {
       .status(400)
       .json({ error: "Username and password are required" });
   }
-
   const query = "INSERT INTO users (username, password) VALUES (?, ?)";
-  console.log(username, password);
+
   connection.query(query, [username, password], (error, results, fields) => {
     if (error) {
       console.log(error);
       return res.status(500).json({ error: "Internal server error" });
     }
-    console.log(results);
-    return res.status(201).json({ message: "User created successfully" });
+    console.log("results are", results.insertId);
+
+    const token = createSecretToken(results.insertId);
+    res.cookie("token", token, {
+      httpOnly: false,
+    });
+    res
+      .status(201)
+      .json({ message: "User signed in successfully", success: true });
   });
 });
 
