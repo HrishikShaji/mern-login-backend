@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { createSecretToken } from "../utils/generateToken";
+import { createSecretToken } from "./utils/generateToken";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 
