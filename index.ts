@@ -27,7 +27,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-app.post("/", (req, res) => {
+app.get("/", (req, res) => res.send("working"));
+
+app.post("/verify", (req, res) => {
   const token = req.cookies.token;
   console.log("token is", token);
   if (!token) {
