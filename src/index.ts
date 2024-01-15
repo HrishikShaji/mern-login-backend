@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { createSecretToken } from "../utils/generateToken";
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 
 var mysql = require("mysql");
 dotenv.config();
@@ -23,6 +25,32 @@ connection.connect();
 const app = express();
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
+app.post("/", (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.json({ status: false });
+  }
+  jwt.verify(token, process.env.SECRET, async (err, data) => {
+    if (err) {
+      return res.json({ status: false });
+    } else {
+      const query = "SELECT * FROM users WHERE id = ?";
+      connection.query(query, [data.id], (error, results, fields) => {
+        if (error) {
+          return res.status(500).json({ error: "Internal server error" });
+        }
+        if (results.length > 0) {
+          console.log("token", results);
+          res.status(201).json({ user: results[0], success: true });
+        } else {
+          return res.json({ status: false });
+        }
+      });
+    }
+  });
+});
 
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
